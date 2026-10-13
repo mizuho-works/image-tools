@@ -1005,8 +1005,16 @@
             <div class="range-row"><input type="range" id="stBright" min="0" max="50" value="0"><output id="stBrightOut">0</output></div>
           </fieldset>
           <fieldset>
+            <legend>背景のふちを暗く(光の落ち方)</legend>
+            <div class="range-row"><input type="range" id="stVig" min="0" max="100" value="40"><output id="stVigOut">40</output></div>
+          </fieldset>
+          <fieldset>
+            <legend>背景のざらつき(写真らしさ)</legend>
+            <div class="range-row"><input type="range" id="stGrain" min="0" max="100" value="25"><output id="stGrainOut">25</output></div>
+          </fieldset>
+          <fieldset>
             <legend>背景の色</legend>
-            <div class="checkline"><input type="color" id="stBg" value="#ffffff"><button type="button" class="secondary" id="stBgWhite" style="padding:5px 10px; font-size:0.85rem;">白に戻す</button></div>
+            <div class="checkline"><input type="color" id="stBg" value="#f4f4f1"><button type="button" class="secondary" id="stBgWhite" style="padding:5px 10px; font-size:0.85rem;">初期の色に戻す</button></div>
           </fieldset>
         </div>
       </div>
@@ -5345,6 +5353,13 @@ function buildZip(files) {
       await new Promise((r) => setTimeout(r, 20));
       S = { w, h, base, L, P0, name: file.name.replace(/\.[^/.]+$/, ''), fix: { p: new Int8Array(n), f: new Int8Array(n) }, dirtyP: true, dirtyW: true, P: null, W: null };
       S.Fauto = autoFloor(S);
+      { // 背景の光の中心 = 人物の重心。ここから離れるほど、背景が少し暗くなる
+        let sx = 0, sy = 0, sn = 0;
+        for (let y = 0; y < h; y += 2) for (let x = 0; x < w; x += 2) if (P0[y * w + x] > 0.5) { sx += x; sy += y; sn++; }
+        const cx0 = sn ? sx / sn : w / 2, cy0 = sn ? sy / sn : h / 2, R = 0.62 * Math.hypot(w, h) / 2 * 1.4, vd = new Float32Array(n);
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const t = Math.min(1, Math.hypot(x - cx0, (y - cy0) * 1.15) / R); vd[y * w + x] = t * t; }
+        S.vd = vd;
+      }
       let any = 0; for (let i = 0; i < n; i += 7) any += S.Fauto[i];
       canvas.width = w; canvas.height = h;
       $('stDrop').hidden = true; $('stWork').hidden = false; $('stEmpty').hidden = true;
@@ -5403,12 +5418,14 @@ function buildZip(files) {
       }
       ctx.putImageData(img, 0, 0); return;
     }
-    const k = val('stShadow') / 100, bg = hexRgb($('stBg').value), ref = Math.max(60, S.refL || 235) * 1.02;
+    const k = val('stShadow') / 100, bg = hexRgb($('stBg').value), ref = Math.max(60, S.refL || 235) * 1.02, vig = val('stVig') / 100 * 0.24, gr = val('stGrain') / 100 * 14;
     const gam = 1 / (1 + val('stBright') / 100), lut = new Uint8Array(256);
     for (let v = 0; v < 256; v++) lut[v] = Math.round(255 * Math.pow(v / 255, gam));
     for (let i = 0, p = 0; i < n; i++, p += 4) {
       let sh = L[i] / ref; if (sh > 1) sh = 1;
-      const f = 1 - W[i] * k * (1 - sh), a = P[i];
+      const a = P[i];
+      let f = (1 - W[i] * k * (1 - sh)) * (1 - vig * S.vd[i]);
+      if (gr > 0 && a < 1) { const hsh = Math.imul(i, 2654435761) >>> 8; f += ((hsh & 1023) / 1023 - 0.5) * gr / 128; } // 細かいざらつき(背景だけ)
       let r = bg[0] * f, g = bg[1] * f, b = bg[2] * f;
       if (a > 0) { r = lut[base[p]] * a + r * (1 - a); g = lut[base[p + 1]] * a + g * (1 - a); b = lut[base[p + 2]] * a + b * (1 - a); }
       d[p] = r; d[p + 1] = g; d[p + 2] = b; d[p + 3] = 255;
@@ -5463,7 +5480,7 @@ function buildZip(files) {
   $('stReset').addEventListener('click', () => { if (!S) return; S.fix.p.fill(0); S.fix.f.fill(0); S.dirtyP = S.dirtyW = true; schedule(); setStatus('手直しをリセットしました。'); });
 
   /* ---------- スライダーなど ---------- */
-  for (const id of ['stShadow', 'stFeather', 'stChoke', 'stBright', 'stBrushSize']) {
+  for (const id of ['stShadow', 'stFeather', 'stChoke', 'stBright', 'stBrushSize', 'stVig', 'stGrain']) {
     $(id).addEventListener('input', () => {
       $(id + 'Out').textContent = $(id).value;
       if (id === 'stChoke') { if (S) S.dirtyP = true; } else if (id === 'stFeather') { if (S) S.dirtyW = true; }
@@ -5471,7 +5488,7 @@ function buildZip(files) {
     });
   }
   $('stBg').addEventListener('input', schedule);
-  $('stBgWhite').addEventListener('click', () => { $('stBg').value = '#ffffff'; schedule(); });
+  $('stBgWhite').addEventListener('click', () => { $('stBg').value = '#f4f4f1'; schedule(); });
   $('stView').addEventListener('change', schedule);
   const cmp = $('stCompare');
   cmp.addEventListener('pointerdown', () => { showOrig = true; schedule(); });
