@@ -972,7 +972,7 @@
 
 <section id="tab-studio" hidden>
   <h1>白背景スタジオ</h1>
-  <p class="lead">写真の背景を、白いスタジオで撮ったように変えます。人物の下の布のしわや影は、自然なまま残します。すべてブラウザ内で処理され、写真はサーバーに送信されません。</p>
+  <p class="lead">写真の背景を、ぼかした部屋や、白いスタジオに変えます。人物はAIで切り抜きます。すべてブラウザ内で処理され、写真はサーバーに送信されません。</p>
 
 <div class="split editor"><div class="side">
   <div class="panel">
@@ -986,16 +986,69 @@
       <div class="filebar"><strong id="stFileName"></strong><button type="button" class="secondary" id="stOpen" style="padding:5px 10px; font-size:0.8rem;">別の写真を開く</button></div>
 
       <div class="stepcard">
-        <h3>仕上がりの調整</h3>
-        <div class="options" style="margin-top:6px;">
-          <fieldset>
-            <legend>影の濃さ</legend>
+        <h3>背景</h3>
+        <div class="checkline"><select id="stMode" style="width:100%;">
+          <option value="blur" selected>元の部屋をぼかす(ポートレート風)</option>
+          <option value="room">やさしいリビング風(自動で作る・ぼかし)</option>
+          <option value="photo">自分の背景写真を使う(ぼかし)</option>
+          <option value="studio">白いスタジオ(布の影を残す)</option>
+        </select></div>
+        <div class="options" style="margin-top:10px;">
+          <fieldset data-m="photo">
+            <legend>背景の写真</legend>
+            <div class="checkline"><button type="button" class="secondary" id="stBgPick" style="padding:5px 10px; font-size:0.85rem;">写真を選ぶ</button><span id="stBgFileName" style="font-size:0.8rem; color:var(--sub); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:11em;">まだ選んでいません</span></div>
+            <input type="file" id="stBgFile" accept="image/*,.jfif,.jpe" hidden>
+          </fieldset>
+          <fieldset data-m="photo">
+            <legend>背景の大きさ(%)</legend>
+            <div class="range-row"><input type="range" id="stBgZoom" min="100" max="250" value="100"><output id="stBgZoomOut">100</output></div>
+          </fieldset>
+          <fieldset data-m="photo">
+            <legend>背景の位置(左右)</legend>
+            <div class="range-row"><input type="range" id="stBgX" min="-100" max="100" value="0"><output id="stBgXOut">0</output></div>
+          </fieldset>
+          <fieldset data-m="photo">
+            <legend>背景の位置(上下)</legend>
+            <div class="range-row"><input type="range" id="stBgY" min="-100" max="100" value="0"><output id="stBgYOut">0</output></div>
+          </fieldset>
+          <fieldset data-m="room photo blur">
+            <legend>背景のぼかし具合</legend>
+            <div class="range-row"><input type="range" id="stBlur" min="0" max="100" value="60"><output id="stBlurOut">60</output></div>
+          </fieldset>
+          <fieldset data-m="room photo blur">
+            <legend>人物を背景になじませる</legend>
+            <div class="range-row"><input type="range" id="stHarm" min="0" max="100" value="40"><output id="stHarmOut">40</output></div>
+          </fieldset>
+          <fieldset data-m="room photo blur">
+            <legend>足元の影</legend>
+            <div class="range-row"><input type="range" id="stFoot" min="0" max="100" value="35"><output id="stFootOut">35</output></div>
+          </fieldset>
+          <fieldset data-m="studio">
+            <legend>布の影の濃さ</legend>
             <div class="range-row"><input type="range" id="stShadow" min="0" max="150" value="100"><output id="stShadowOut">100</output></div>
           </fieldset>
-          <fieldset>
+          <fieldset data-m="studio">
             <legend>布の奥のなじませ具合</legend>
             <div class="range-row"><input type="range" id="stFeather" min="0" max="100" value="30"><output id="stFeatherOut">30</output></div>
           </fieldset>
+          <fieldset data-m="studio">
+            <legend>背景の色</legend>
+            <div class="checkline"><input type="color" id="stBg" value="#f4f4f1"><button type="button" class="secondary" id="stBgWhite" style="padding:5px 10px; font-size:0.85rem;">初期の色に戻す</button></div>
+          </fieldset>
+          <fieldset>
+            <legend>背景のふちを暗く(光の落ち方)</legend>
+            <div class="range-row"><input type="range" id="stVig" min="0" max="100" value="20"><output id="stVigOut">20</output></div>
+          </fieldset>
+          <fieldset>
+            <legend>背景のざらつき(写真らしさ)</legend>
+            <div class="range-row"><input type="range" id="stGrain" min="0" max="100" value="25"><output id="stGrainOut">25</output></div>
+          </fieldset>
+        </div>
+      </div>
+
+      <div class="stepcard">
+        <h3>人物の仕上げ</h3>
+        <div class="options" style="margin-top:6px;">
           <fieldset>
             <legend>人物の縁を内側へ(px)</legend>
             <div class="range-row"><input type="range" id="stChoke" min="0" max="4" value="1"><output id="stChokeOut">1</output></div>
@@ -1004,30 +1057,18 @@
             <legend>人物を明るくする</legend>
             <div class="range-row"><input type="range" id="stBright" min="0" max="50" value="0"><output id="stBrightOut">0</output></div>
           </fieldset>
-          <fieldset>
-            <legend>背景のふちを暗く(光の落ち方)</legend>
-            <div class="range-row"><input type="range" id="stVig" min="0" max="100" value="40"><output id="stVigOut">40</output></div>
-          </fieldset>
-          <fieldset>
-            <legend>背景のざらつき(写真らしさ)</legend>
-            <div class="range-row"><input type="range" id="stGrain" min="0" max="100" value="25"><output id="stGrainOut">25</output></div>
-          </fieldset>
-          <fieldset>
-            <legend>背景の色</legend>
-            <div class="checkline"><input type="color" id="stBg" value="#f4f4f1"><button type="button" class="secondary" id="stBgWhite" style="padding:5px 10px; font-size:0.85rem;">初期の色に戻す</button></div>
-          </fieldset>
         </div>
       </div>
 
       <div class="stepcard">
         <h3>うまくいかないところを手で直す</h3>
-        <p>羽やリボンが欠けたときは「人物を足す」で、その上をなぞります。背景が残ったときは「人物から外す」です。布の影が消えたときは「布の影を残す」、背景が白くならないときは「布を白くする」でなぞります。</p>
+        <p>羽やリボンが欠けたときは「人物を足す」で、その上をなぞります。背景が残ったときは「人物から外す」でなぞります。<span data-m="studio">布の影が消えたときは「布の影を残す」、背景が白くならないときは「布を白くする」です。</span></p>
         <div class="radio-row" style="flex-direction:column; gap:6px;">
           <label class="opt"><input type="radio" name="stBrush" value="none" checked> 手直ししない(見るだけ)</label>
           <label class="opt"><input type="radio" name="stBrush" value="pAdd"> 人物を足す</label>
           <label class="opt"><input type="radio" name="stBrush" value="pDel"> 人物から外す</label>
-          <label class="opt"><input type="radio" name="stBrush" value="fAdd"> 布の影を残す</label>
-          <label class="opt"><input type="radio" name="stBrush" value="fDel"> 布を白くする</label>
+          <label class="opt" data-m="studio"><input type="radio" name="stBrush" value="fAdd"> 布の影を残す</label>
+          <label class="opt" data-m="studio"><input type="radio" name="stBrush" value="fDel"> 布を白くする</label>
         </div>
         <div class="range-row" style="margin-top:8px;"><span style="width:6em; white-space:nowrap;">ブラシの太さ</span><input type="range" id="stBrushSize" min="4" max="200" value="36"><output id="stBrushSizeOut">36</output></div>
         <div class="checkline" style="margin-top:8px;">
@@ -1035,7 +1076,7 @@
           <select id="stView">
             <option value="result" selected>仕上がり</option>
             <option value="person">人物の範囲(赤)</option>
-            <option value="floor">布の範囲(青)</option>
+            <option value="floor" data-m="studio">布の範囲(青)</option>
           </select>
           <button type="button" class="secondary" id="stReset" style="padding:5px 10px; font-size:0.85rem;">手直しをリセット</button>
         </div>
@@ -1050,7 +1091,7 @@
         </div>
       </div>
     </div>
-    <p class="tip">人物をAIで見つけ、その下の布(シーツなど)を探して、布のしわや影だけを残します。初回だけAIモデル(約45MB)をダウンロードするので、時間がかかります。写真が大きいときは、長い辺を2000pxに縮小して処理します。</p>
+    <p class="tip">人物をAIで見つけて切り抜き、背景を差し替えます。初回だけAIモデル(約45MB)をダウンロードするので、時間がかかります。写真が大きいときは、長い辺を2000pxに縮小して処理します。「自分の背景写真」は、リビングなどの写真を選ぶと、ぼかして人物の後ろに置きます。</p>
     <div id="stStatus" class="status"></div>
   </div>
 
@@ -5309,6 +5350,22 @@ function buildZip(files) {
     }
     const grown = morph(comp, w, h, rg, false), F = new Uint8Array(n);
     for (let i = 0; i < n; i++) F[i] = grown[i] && sheet[i] ? 1 : 0;
+    // AIが、人物と一緒に布の一部まで「人物」に含めることがある。布につながる白っぽい部分(人物の判定は無視)を求めておく
+    {
+      const sh2 = new Uint8Array(n);
+      for (let i = 0; i < n; i++) if (L[i] > med * 0.5 && sat(base, i * 4) < 0.22) sh2[i] = 1;
+      const op2 = morph(morph(sh2, w, h, r, true), w, h, r, false), c2 = new Uint8Array(n); sp = 0;
+      for (let y = h - 3; y < h; y++) for (let x = 0; x < w; x++) { const i = y * w + x; if (op2[i] && !c2[i]) { c2[i] = 1; stack[sp++] = i; } }
+      while (sp) {
+        const i = stack[--sp], x = i % w;
+        if (x > 0 && op2[i - 1] && !c2[i - 1]) { c2[i - 1] = 1; stack[sp++] = i - 1; }
+        if (x < w - 1 && op2[i + 1] && !c2[i + 1]) { c2[i + 1] = 1; stack[sp++] = i + 1; }
+        if (i >= w && op2[i - w] && !c2[i - w]) { c2[i - w] = 1; stack[sp++] = i - w; }
+        if (i < n - w && op2[i + w] && !c2[i + w]) { c2[i + w] = 1; stack[sp++] = i + w; }
+      }
+      const g2 = morph(c2, w, h, rg, false); st.sheetAll = new Uint8Array(n);
+      for (let i = 0; i < n; i++) st.sheetAll[i] = g2[i] && sh2[i] ? 1 : 0;
+    }
     // 列ごとに「布の一番奥(上端)」の高さを求める。人物にさえぎられた列は、まわりの列から補う
     const top0 = new Float32Array(w).fill(Infinity);
     for (let x = 0; x < w; x++) for (let y = 0; y < h; y++) { const i = y * w + x; if (P0[i] > 0.5) break; if (F[i]) { top0[x] = y; break; } }
@@ -5374,15 +5431,139 @@ function buildZip(files) {
     } finally { busy = false; }
   }
 
+
+  /* ---------- 背景づくり(ぼかした部屋・自分の写真・元の部屋) ---------- */
+  let bgImg = null, bgImgId = 0;
+  const mode = () => $('stMode').value;
+  // 自動で作る「リビング風」: 窓・ソファ・床などを大まかに描いて、あとで大きくぼかす
+  function paintRoom(c, W, H) {
+    const g = c.getContext('2d');
+    let gr = g.createLinearGradient(0, 0, 0, H * 0.66); gr.addColorStop(0, '#f3ebde'); gr.addColorStop(1, '#e2d4c0');
+    g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    const fy = H * 0.62;
+    gr = g.createLinearGradient(0, fy, 0, H); gr.addColorStop(0, '#cfa97f'); gr.addColorStop(1, '#a67d54');
+    g.fillStyle = gr; g.fillRect(0, fy, W, H - fy);
+    g.strokeStyle = 'rgba(110,72,44,0.22)'; g.lineWidth = Math.max(1, H * 0.005);
+    for (let k = 1; k < 9; k++) { const y = fy + (H - fy) * Math.pow(k / 9, 1.4); g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
+    g.fillStyle = '#f7f2e9'; g.fillRect(0, fy - H * 0.028, W, H * 0.028);
+    // 窓(左)
+    g.fillStyle = '#fffdf4'; g.fillRect(W * 0.06, H * 0.09, W * 0.24, H * 0.40);
+    g.strokeStyle = '#ece3d2'; g.lineWidth = H * 0.014; g.strokeRect(W * 0.06, H * 0.09, W * 0.24, H * 0.40);
+    g.beginPath(); g.moveTo(W * 0.18, H * 0.09); g.lineTo(W * 0.18, H * 0.49); g.moveTo(W * 0.06, H * 0.29); g.lineTo(W * 0.30, H * 0.29); g.stroke();
+    g.fillStyle = 'rgba(255,246,222,0.40)'; g.beginPath(); g.ellipse(W * 0.26, H * 0.83, W * 0.20, H * 0.07, -0.15, 0, 7); g.fill();
+    // 額縁
+    g.fillStyle = '#cdbb9f'; g.fillRect(W * 0.43, H * 0.13, W * 0.11, H * 0.15); g.fillStyle = '#f6efe2'; g.fillRect(W * 0.445, H * 0.15, W * 0.08, H * 0.11);
+    g.fillStyle = '#cdbb9f'; g.fillRect(W * 0.58, H * 0.18, W * 0.07, H * 0.10); g.fillStyle = '#efe4d2'; g.fillRect(W * 0.592, H * 0.2, W * 0.046, H * 0.065);
+    // ソファ(右)
+    g.fillStyle = '#d6c1a6'; g.beginPath(); g.roundRect ? g.roundRect(W * 0.60, H * 0.38, W * 0.38, H * 0.26, H * 0.04) : g.rect(W * 0.60, H * 0.38, W * 0.38, H * 0.26); g.fill();
+    g.fillStyle = '#c7ad8d'; g.beginPath(); g.roundRect ? g.roundRect(W * 0.57, H * 0.52, W * 0.43, H * 0.17, H * 0.05) : g.rect(W * 0.57, H * 0.52, W * 0.43, H * 0.17); g.fill();
+    g.fillStyle = '#e9d9c2'; g.beginPath(); g.ellipse(W * 0.72, H * 0.50, W * 0.05, H * 0.06, 0.3, 0, 7); g.fill();
+    // 観葉植物(左の床)
+    g.fillStyle = '#b5936f'; g.fillRect(W * 0.34, H * 0.56, W * 0.05, H * 0.08);
+    g.fillStyle = '#7d9468'; for (const [dx, dy, r] of [[0.36, 0.46, 0.05], [0.33, 0.51, 0.04], [0.39, 0.5, 0.045], [0.365, 0.40, 0.035]]) { g.beginPath(); g.ellipse(W * dx, H * dy, W * r, H * r * 1.3, 0, 0, 7); g.fill(); }
+    // あたたかい光の玉
+    for (const [dx, dy, r, a] of [[0.50, 0.08, 0.05, 0.35], [0.82, 0.16, 0.04, 0.3], [0.70, 0.30, 0.03, 0.25]]) { g.fillStyle = 'rgba(255,240,200,' + a + ')'; g.beginPath(); g.arc(W * dx, H * dy, Math.min(W, H) * r, 0, 7); g.fill(); }
+  }
+  // 画像を「余白なく」敷き詰める(大きさ・位置を調整できる)
+  function drawCover(g, img, W, H) {
+    const z = val('stBgZoom') / 100, sc = Math.max(W / img.naturalWidth, H / img.naturalHeight) * z;
+    const dw = img.naturalWidth * sc, dh = img.naturalHeight * sc;
+    g.fillStyle = '#888'; g.fillRect(0, 0, W, H);
+    g.imageSmoothingQuality = 'high'; g.drawImage(img, (W - dw) / 2 - (W - dw) / 2 * val('stBgX') / 100, (H - dh) / 2 - (H - dh) / 2 * val('stBgY') / 100, dw, dh);
+  }
+  function upscale(lowRGBA, lw, lh, w, h) { // 小さな画像を、なめらかに拡大する
+    const a = document.createElement('canvas'); a.width = lw; a.height = lh; a.getContext('2d').putImageData(new ImageData(lowRGBA, lw, lh), 0, 0);
+    const b = document.createElement('canvas'); b.width = w; b.height = h; const g = b.getContext('2d', { willReadFrequently: true });
+    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(a, 0, 0, w, h);
+    return g.getImageData(0, 0, w, h).data;
+  }
+  function blurRGBA(rgba, lw, lh, sigma) {
+    const out = new Uint8ClampedArray(lw * lh * 4), n = lw * lh, ch = new Float32Array(n);
+    for (let c = 0; c < 3; c++) {
+      for (let i = 0; i < n; i++) ch[i] = rgba[i * 4 + c];
+      const b = blur(ch, lw, lh, sigma);
+      for (let i = 0; i < n; i++) out[i * 4 + c] = b[i];
+    }
+    for (let i = 0; i < n; i++) out[i * 4 + 3] = 255;
+    return out;
+  }
+  function makeBG() {
+    const { w, h, base } = S, m = mode(), dim = Math.max(w, h);
+    const sigma = val('stBlur') / 100 * 0.03 * dim;           // 実際の画素での、ぼかしの大きさ
+    const f = sigma >= 8 || m !== 'photo' ? 4 : 1, lw = Math.max(1, Math.round(w / f)), lh = Math.max(1, Math.round(h / f));
+    let low;
+    if (m === 'blur') {
+      // 人物の色が背景ににじまないよう、人物の部分を除いて平均する(重み付きのぼかし)
+      if (!S.Mfull) {
+        const pm = new Uint8Array(w * h); for (let i = 0; i < w * h; i++) pm[i] = S.P[i] > 0.04 ? 1 : 0;
+        const dl = morph(pm, w, h, Math.round(dim * 0.006) + 2, false); S.Mfull = new Float32Array(w * h); for (let i = 0; i < w * h; i++) S.Mfull[i] = dl[i] ? 0 : 1;
+      }
+      const n = lw * lh, cnt = new Float32Array(n), M = new Float32Array(n), ch = [0, 1, 2].map(() => new Float32Array(n));
+      for (let y = 0; y < h; y++) {
+        const ly = Math.min(lh - 1, (y / f) | 0);
+        for (let x = 0; x < w; x++) {
+          const i = y * w + x, j = ly * lw + Math.min(lw - 1, (x / f) | 0), mm = S.Mfull[i]; cnt[j]++; M[j] += mm;
+          if (mm) { ch[0][j] += base[i * 4]; ch[1][j] += base[i * 4 + 1]; ch[2][j] += base[i * 4 + 2]; }
+        }
+      }
+      const sl = Math.max(1.5, Math.max(sigma, dim * 0.004) / f), sh = sl * 3;
+      for (let j = 0; j < n; j++) M[j] /= cnt[j] || 1;
+      const den = blur(M, lw, lh, sl), denH = blur(M, lw, lh, sh);
+      low = new Uint8ClampedArray(n * 4);
+      for (let c = 0; c < 3; c++) {
+        const a = new Float32Array(n); for (let j = 0; j < n; j++) a[j] = ch[c][j] / (cnt[j] || 1);
+        const num = blur(a, lw, lh, sl), numH = blur(a, lw, lh, sh);
+        for (let j = 0; j < n; j++) low[j * 4 + c] = den[j] > 0.04 ? num[j] / den[j] : denH[j] > 0.002 ? numH[j] / denH[j] : 128;
+      }
+      for (let j = 0; j < n; j++) low[j * 4 + 3] = 255;
+    } else {
+      const cv = document.createElement('canvas'); cv.width = lw; cv.height = lh; const g = cv.getContext('2d', { willReadFrequently: true });
+      if (m === 'photo' && bgImg) drawCover(g, bgImg, lw, lh); else paintRoom(cv, lw, lh);
+      const raw = g.getImageData(0, 0, lw, lh).data, sg = m === 'photo' && bgImg ? sigma / f : Math.max(sigma, dim * 0.012) / f;
+      low = sg >= 0.6 ? blurRGBA(raw, lw, lh, sg) : raw;
+    }
+    const full = f === 1 ? low : upscale(low, lw, lh, w, h);
+    return full;
+  }
+  function bgKey() {
+    return [mode(), val('stBlur'), val('stBgZoom'), val('stBgX'), val('stBgY'), bgImgId, mode() === 'blur' ? S.pRev : 0].join('|');
+  }
+  function getBG() {
+    const k = bgKey();
+    if (S.bgKey !== k) { S.bg = makeBG(); S.bgKey = k; S.gains = null; }
+    return S.bg;
+  }
+  // 足元の影: 人物の下側を、少し下へずらしてぼかしたもの
+  function getShadow() {
+    if (S.shadow) return S.shadow;
+    const { w, h, P } = S, n = w * h; let y0 = h, y1 = 0;
+    for (let y = 0; y < h; y += 2) for (let x = 0; x < w; x += 2) if (P[y * w + x] > 0.5) { if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    const band = y1 - 0.2 * (y1 - y0), dy = Math.round(h * 0.012), sh = new Float32Array(n);
+    for (let y = Math.max(0, Math.floor(band)); y < h; y++) { const ty = Math.min(h - 1, y + dy); for (let x = 0; x < w; x++) { const v = P[y * w + x]; if (v > sh[ty * w + x]) sh[ty * w + x] = v; } }
+    S.shadow = blur(sh, w, h, Math.max(w, h) * 0.016);
+    return S.shadow;
+  }
+  // 人物の色味を、背景に少し寄せる(明るさは変えない)
+  function getGains(bg) {
+    if (S.gains) return S.gains;
+    const { w, h, base, P } = S, pm = [0, 0, 0], bm = [0, 0, 0]; let pn = 0, bn = 0;
+    for (let y = 0; y < h; y += 3) for (let x = 0; x < w; x += 3) { const i = y * w + x; bn++; bm[0] += bg[i * 4]; bm[1] += bg[i * 4 + 1]; bm[2] += bg[i * 4 + 2]; if (P[i] > 0.5) { pn++; pm[0] += base[i * 4]; pm[1] += base[i * 4 + 1]; pm[2] += base[i * 4 + 2]; } }
+    let g = [1, 1, 1];
+    if (pn && bn) { g = [0, 1, 2].map((c) => Math.sqrt((bm[c] / bn + 8) / (pm[c] / pn + 8))); const gl = 0.299 * g[0] + 0.587 * g[1] + 0.114 * g[2]; g = g.map((v) => Math.min(1.12, Math.max(0.88, v / gl))); }
+    S.gains = g; return g;
+  }
+
   /* ---------- 仕上げ(重い部分は、変えたときだけ計算し直す) ---------- */
   const val = (id) => parseFloat($(id).value);
   const hexRgb = (hx) => [1, 3, 5].map((i) => parseInt(hx.substr(i, 2), 16));
   function updatePerson() {
     const { w, h, P0, fix } = S, n = w * h;
     let P = new Float32Array(n);
-    for (let i = 0; i < n; i++) P[i] = fix.p[i] > 0 ? 1 : fix.p[i] < 0 ? 0 : P0[i];
+    const cut = mode() !== 'studio' && S.sheetAll ? S.sheetAll : null; // 背景を差し替えるときは、布の部分は人物から外す
+    for (let i = 0; i < n; i++) P[i] = fix.p[i] > 0 ? 1 : fix.p[i] < 0 ? 0 : (cut && cut[i] ? 0 : P0[i]);
     for (let k = 0; k < val('stChoke'); k++) P = min3(P, w, h);
     S.P = blur(P, w, h, 1);
+    S.pRev = (S.pRev || 0) + 1; S.shadow = null; S.pMean = null; S.Mfull = null;
     S.dirtyP = false;
   }
   function updateFloor() {
@@ -5418,6 +5599,7 @@ function buildZip(files) {
       }
       ctx.putImageData(img, 0, 0); return;
     }
+    if (mode() !== 'studio') { renderRoom(img, d); return; }
     const k = val('stShadow') / 100, bg = hexRgb($('stBg').value), ref = Math.max(60, S.refL || 235) * 1.02, vig = val('stVig') / 100 * 0.24, gr = val('stGrain') / 100 * 14;
     const gam = 1 / (1 + val('stBright') / 100), lut = new Uint8Array(256);
     for (let v = 0; v < 256; v++) lut[v] = Math.round(255 * Math.pow(v / 255, gam));
@@ -5432,7 +5614,47 @@ function buildZip(files) {
     }
     ctx.putImageData(img, 0, 0);
   }
+  function renderRoom(img, d) {
+    const { w, h, base } = S, n = w * h, P = S.P, BG = getBG(), sh = getShadow(), gn = getGains(BG);
+    const foot = val('stFoot') / 100 * 0.6, vig = val('stVig') / 100 * 0.24, gr = val('stGrain') / 100 * 14, al = val('stHarm') / 100;
+    const gam = 1 / (1 + val('stBright') / 100), lut = new Uint8Array(256);
+    for (let v = 0; v < 256; v++) lut[v] = Math.round(255 * Math.pow(v / 255, gam));
+    const g0 = 1 + (gn[0] - 1) * al, g1 = 1 + (gn[1] - 1) * al, g2 = 1 + (gn[2] - 1) * al;
+    for (let i = 0, p = 0; i < n; i++, p += 4) {
+      const a = P[i];
+      let f = (1 - foot * sh[i]) * (1 - vig * S.vd[i]);
+      if (gr > 0 && a < 1) { const hsh = Math.imul(i, 2654435761) >>> 8; f += ((hsh & 1023) / 1023 - 0.5) * gr / 128; }
+      let r = BG[p] * f, g = BG[p + 1] * f, b = BG[p + 2] * f;
+      if (a > 0) { r = lut[base[p]] * g0 * a + r * (1 - a); g = lut[base[p + 1]] * g1 * a + g * (1 - a); b = lut[base[p + 2]] * g2 * a + b * (1 - a); }
+      d[p] = r; d[p + 1] = g; d[p + 2] = b; d[p + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+  }
   const schedule = () => { if (!raf) raf = requestAnimationFrame(render); };
+
+  // 背景の種類に合わせて、表示する設定を切り替える
+  function applyMode() {
+    const m = mode();
+    document.querySelectorAll('#tab-studio [data-m]').forEach((el) => { const on = el.dataset.m.split(' ').includes(m); if (el.tagName === 'OPTION') { el.disabled = !on; el.hidden = !on; } else el.hidden = !on; });
+    if (m !== 'studio') {
+      const cur = document.querySelector('input[name=stBrush]:checked').value;
+      if (cur === 'fAdd' || cur === 'fDel') { document.querySelector('input[name=stBrush][value=none]').click(); }
+      if ($('stView').value === 'floor') $('stView').value = 'result';
+    }
+    $('stHint').textContent = m === 'photo' && !bgImg ? '「背景の写真」で、写真を選んでください(いまは自動のリビング風です)。' : '';
+    if (S) { S.bgKey = null; S.dirtyP = true; schedule(); }
+  }
+  $('stMode').addEventListener('change', applyMode);
+  $('stBgPick').addEventListener('click', () => $('stBgFile').click());
+  $('stBgFile').addEventListener('change', () => {
+    const f = $('stBgFile').files[0]; $('stBgFile').value = ''; if (!f) return;
+    const url = URL.createObjectURL(f), im = new Image();
+    im.onload = () => { bgImg = im; bgImgId++; $('stBgFileName').textContent = f.name; applyMode(); };
+    im.onerror = () => { URL.revokeObjectURL(url); setStatus('背景の写真を読み込めませんでした。', 'err'); };
+    im.src = url;
+  });
+  for (const id of ['stBlur', 'stHarm', 'stFoot', 'stBgZoom', 'stBgX', 'stBgY']) $(id).addEventListener('input', () => { $(id + 'Out').textContent = $(id).value; schedule(); });
+
 
   /* ---------- 手で直すブラシ ---------- */
   const box = $('stViewBox'), ring = $('stRing');
@@ -5520,7 +5742,8 @@ function buildZip(files) {
   drop.addEventListener('dragleave', () => drop.classList.remove('drag'));
   drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('drag'); if (e.dataTransfer.files.length) openFile(e.dataTransfer.files[0]); });
   input.addEventListener('change', () => { if (input.files.length) openFile(input.files[0]); input.value = ''; });
-  window.__studio = { get S() { return S; }, openFile, render };
+  window.__studio = { get S() { return S; }, openFile, render, applyMode };
+  applyMode();
 })();
 </script>
 
